@@ -1,21 +1,80 @@
 import { Fragment, useRef, useState } from "react"
 import { TodoItem } from "./TodoItem"
+import uuid4 from "uuid4"
 
 const TodoList = () => {
 
     const [todos, setTodos] = useState([
-        { id: 1, task: "Tarea 1 🏠" },
-        { id: 2, task: "Tarea 2 🏠" },
-        { id: 3, task: "Tarea 3 🏠" },
-        { id: 4, task: "Tarea 4 🏠" },
-        { id: 5, task: "Tarea 5 🏠" },
     ])
+
+    const cambiarEstado = (id) => {
+        const newTodos = [...todos] //Investigar que significa usar ...
+        const todo = newTodos.find((todo) => todo.id === id)
+        todo.completed = !todo.completed
+        setTodos(newTodos)
+    }
+
+    const eliminarTareas = () => {
+        const newTodos = todos.filter((todo) => !todo.completed)
+        setTodos(newTodos)
+    }
 
     const taskRef = useRef()
 
     const nuevaTarea = () => {
-        const tarea = taskRef.current.value;
-        alert(tarea)
+        const tarea = taskRef.current.value.trim();
+        taskRef.current.value = null
+
+        if (tarea === '') return
+
+        setTodos((prevTodos) => {
+            const newTask = {
+                id: uuid4(),
+                task: tarea,
+                completed: false,
+            }
+            return [...prevTodos, newTask]
+        })
+
+    }
+
+    const ResumenTareas = () => {
+        const cantTareas = contadorTareas();
+
+        if (cantTareas === 0) {
+            return (
+                <div className="alert alert-success mt-3 text-center">
+                    Felicidades no tienes tareas pendientes 😊
+                </div>
+            )
+        }
+
+        if (cantTareas === 1) {
+            return (
+                <div className="alert alert-info mt-3 text-center">
+                    Solo te queda 1 tarea 👌
+                </div>
+            )
+        }
+
+        if (cantTareas < 5) {
+            return (
+                <div className="alert alert-warning mt-3 text-center">
+                    Te quedan {cantTareas} pendientes 😅
+                </div>
+            )
+        }
+
+        return (
+            <div className="alert alert-danger mt-3 text-center">
+                ¡Urgente! Te quedan {cantTareas} pendientes 😯😬
+            </div>
+        )
+
+    }
+
+    const contadorTareas = () => {
+        return todos.filter((todo) => !todo.completed).length
     }
 
     return (
@@ -26,7 +85,7 @@ const TodoList = () => {
                 <div className="input-group mb-3">
                     <input type="text" className="form-control" placeholder="Ingresa una tarea" ref={taskRef} />
                     <button className="btn btn-outline-primary" type="button" id="agregar" onClick={nuevaTarea} ><i className="bi bi-plus-circle-fill"></i></button>
-                    <button className="btn btn-outline-danger" type="button" id="eliminar"><i className="bi bi-trash3-fill"></i></button>
+                    <button className="btn btn-outline-danger" type="button" id="eliminar" onClick={eliminarTareas}><i className="bi bi-trash3-fill"></i></button>
                 </div>
 
 
@@ -35,10 +94,12 @@ const TodoList = () => {
                     {/* Recorrer la lista */}
 
                     {todos.map((todo) => (
-                        <TodoItem todo={todo} key={todo.id} />
+                        <TodoItem todo={todo} key={todo.id} cambiarEstado={cambiarEstado} />
                     ))}
 
                 </ul>
+
+                <ResumenTareas />
 
 
             </div>
